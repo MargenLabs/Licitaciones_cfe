@@ -23,6 +23,7 @@ import time
 import requests
 import os
 import json
+import shutil
 
 
 # Archivo donde guardaremos, por licitación, el último Estado/Adjudicado/Monto vistos
@@ -74,10 +75,18 @@ def save_state():
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
 
-# Configuración de Selenium
-service = Service('/opt/homebrew/bin/chromedriver')
+# Opciones headless y sin sandbox
 options = webdriver.ChromeOptions()
 options.add_argument("--headless")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+
+# Busca chromedriver en el PATH
+chromedriver_path = shutil.which("chromedriver")
+if not chromedriver_path:
+    raise RuntimeError("chromedriver no encontrado en PATH")
+
+service = Service(chromedriver_path)
 driver = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(driver, 30)
 
