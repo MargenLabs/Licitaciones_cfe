@@ -28,8 +28,6 @@ jobs:
           chrome-version: 'latest'
       - name: Install Chromedriver
         uses: nanasess/setup-chromedriver@v2
-        with:
-          chromedriver-version: 'latest'
 
       - name: Run scraper
         env:
