@@ -3,7 +3,7 @@ name: CFE Scraper
 on:
   workflow_dispatch:     # permite lanzarlo manualmente
   schedule:
-    - cron: '0 15,19,23 * * *'   # ejecuta en horarios UTC (8am, 12pm y 4pm de Tijuana) 
+    - cron: '0 15,19,23 * * *'   # corre a 08:00, 12:00 y 16:00 hora Tijuana (15,19,23 UTC)
 
 jobs:
   run-scraper:
@@ -21,7 +21,6 @@ jobs:
       - name: Install dependencies
         run: pip install --no-cache-dir -r requirements.txt
 
-      # Si usas Selenium + Chrome/Chromedriver:
       - name: Install Chromium
         uses: browser-actions/setup-chrome@v1
         with:
@@ -30,30 +29,53 @@ jobs:
       - name: Install Chromedriver
         uses: nanasess/setup-chromedriver@v2
 
-      # ── Simula un cambio en state.json ──────────────────────────────────────
+      - name: Test Telegram connectivity
+        env:
+          TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python3 <<'EOF'
+          import os, requests
+          token = os.environ["TELEGRAM_TOKEN"]
+          chat = os.environ["TELEGRAM_CHAT_ID"]
+          print("DEBUG: enviando mensaje de test a Telegram…")
+          r = requests.post(
+              f"https://api.telegram.org/bot{token}/sendMessage",
+              json={"chat_id": chat, "text": "🚀 Test Telegram desde GitHub Actions"}
+          )
+          print("DEBUG: status", r.status_code, "body", r.text)
+          EOF
+
       - name: Simulate state.json change
         run: |
           python3 <<'EOF'
           import json, os
 
-          # Si no existe, crea un JSON vacío
-          if not os.path.exists("state.json"):
+          fn = "state.json"
+          # 1) Carga o crea
+          if os.path.exists(fn):
+              s = json.load(open(fn))
+          else:
               s = {}
-          else:
-              s = json.load(open("state.json"))
 
-          # Simula modificación: fuerza un cambio en alguna licitación
-          if "CFE-0201" in s:
-              s["CFE-0201"]["estado"] = "PruebaGitHub"
+          # 2) Fuerza un cambio en cada licitación, o añade un ejemplo
+          if s:
+              for k in s:
+                  s[k]["estado"] = "PruebaGitHub"
           else:
-              # Si está vacío o usa otra clave, añade una de ejemplo
-              s["CFE-0201"] = {"estado": "PruebaGitHub"}
+              s["SIMULATED_ID"] = {"estado": "PruebaGitHub"}
 
-          # Guarda el state.json simulado
-          with open("state.json", "w") as f:
+          # 3) Guarda y loggea
+          with open(fn, "w") as f:
               json.dump(s, f, indent=2)
-
+          print("DEBUG: simulated state.json:", json.dumps(s, indent=2))
           EOF
+
+      - name: Debug: list workspace files
+        run: ls -Rla .
+
+      - name: Debug: show state.json
+        run: cat state.json
 
       - name: Run scraper
         env:
