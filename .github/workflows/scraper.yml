@@ -1,0 +1,38 @@
+name: CFE Scraper
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # ejecuta cada 6 horas (ajusta según necesidad)
+  workflow_dispatch:      # permite lanzarlo manualmente
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install --no-cache-dir -r requirements.txt
+
+      # Si usas Selenium + Chrome/Chromedriver:
+      - name: Install Chromium
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: 'latest'
+      - name: Install Chromedriver
+        uses: actions/setup-chromedriver@v3
+        with:
+          version: 'latest'
+
+      - name: Run scraper
+        env:
+          TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scraper_cfe.py
