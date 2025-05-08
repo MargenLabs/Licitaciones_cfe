@@ -1,9 +1,9 @@
 name: CFE Scraper
 
 on:
+  workflow_dispatch:     # permite lanzarlo manualmente
   schedule:
     - cron: '0 15,19,23 * * *'   # ejecuta en horarios UTC (8am, 12pm y 4pm de Tijuana) 
-  workflow_dispatch:      # permite lanzarlo manualmente
 
 jobs:
   run-scraper:
