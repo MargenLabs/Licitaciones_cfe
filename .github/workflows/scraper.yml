@@ -33,41 +33,41 @@ jobs:
         env:
           TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-            run: |
+        run: |
           python3 <<'EOF'
-          import os, requests
-          token = os.environ["TELEGRAM_TOKEN"]
-          chat = os.environ["TELEGRAM_CHAT_ID"]
-          print("DEBUG: enviando mensaje de test a Telegram…")
-          r = requests.post(
-              f"https://api.telegram.org/bot{token}/sendMessage",
-              json={"chat_id": chat, "text": "🚀 Test Telegram desde GitHub Actions"}
-          )
-          print("DEBUG: status", r.status_code, "body", r.text)
-          EOF
+            import os, requests
+            token = os.environ["TELEGRAM_TOKEN"]
+            chat = os.environ["TELEGRAM_CHAT_ID"]
+            print("DEBUG: enviando mensaje de test a Telegram…")
+            r = requests.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={"chat_id": chat, "text": "🚀 Test Telegram desde GitHub Actions"}
+            )
+            print("DEBUG: status", r.status_code, "body", r.text)
+            EOF
 
       - name: Simulate state.json change
-            run: |
+        run: |
           python3 <<'EOF'
-          import json, os
+            import json, os
 
-          fn = "state.json"
-          if os.path.exists(fn):
-              s = json.load(open(fn))
-          else:
-              s = {}
+            fn = "state.json"
+            if os.path.exists(fn):
+                s = json.load(open(fn))
+            else:
+                s = {}
 
-          if s:
-              for k in s:
-                  s[k]["estado"] = "PruebaGitHub"
-          else:
-              s["SIMULATED_ID"] = {"estado": "PruebaGitHub"}
+            if s:
+                for k in s:
+                    s[k]["estado"] = "PruebaGitHub"
+            else:
+                s["SIMULATED_ID"] = {"estado": "PruebaGitHub"}
 
-          with open(fn, "w") as f:
-              json.dump(s, f, indent=2)
+            with open(fn, "w") as f:
+                json.dump(s, f, indent=2)
 
-          print("DEBUG: simulated state.json:", json.dumps(s, indent=2))
-          EOF
+            print("DEBUG: simulated state.json:", json.dumps(s, indent=2))
+            EOF
 
       - name: Debug: list workspace files
         run: ls -Rla .
