@@ -33,7 +33,7 @@ jobs:
         env:
           TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
+            run: |
           python3 <<'EOF'
           import os, requests
           token = os.environ["TELEGRAM_TOKEN"]
@@ -47,7 +47,7 @@ jobs:
           EOF
 
       - name: Simulate state.json change
-        run: |
+            run: |
           python3 <<'EOF'
           import json, os
 
