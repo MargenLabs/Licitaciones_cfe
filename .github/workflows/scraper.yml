@@ -47,7 +47,7 @@ jobs:
           EOF
 
       - name: Simulate state.json change
-          run: |
+        run: |
           python3 <<'EOF'
           import json, os
 
@@ -70,13 +70,13 @@ jobs:
           EOF
 
       - name: Debug: list workspace files
-        run: ls -Rla .
+         run: ls -Rla .
 
       - name: Debug: show state.json
-        run: cat state.json
+         run: cat state.json
 
       - name: Run scraper
         env:
           TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python scraper_cfe.py
+       run: python scraper_cfe.py
