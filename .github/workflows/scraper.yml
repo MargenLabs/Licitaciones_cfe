@@ -1,9 +1,9 @@
 name: CFE Scraper
 
 on:
-  workflow_dispatch:     # permite lanzarlo manualmente
+  workflow_dispatch:
   schedule:
-    - cron: '0 15,19,23 * * *'   # corre a 08:00, 12:00 y 16:00 hora Tijuana (15,19,23 UTC)
+    - cron: '0 15,19,23 * * *'  # 8am, 12pm y 4pm Tijuana (UTC−7 → UTC 15,19,23)
 
 jobs:
   run-scraper:
@@ -52,20 +52,17 @@ jobs:
           import json, os
 
           fn = "state.json"
-          # 1) Carga o crea
           if os.path.exists(fn):
               s = json.load(open(fn))
           else:
               s = {}
 
-          # 2) Fuerza un cambio en cada licitación, o añade un ejemplo
           if s:
               for k in s:
                   s[k]["estado"] = "PruebaGitHub"
           else:
               s["SIMULATED_ID"] = {"estado": "PruebaGitHub"}
 
-          # 3) Guarda y loggea
           with open(fn, "w") as f:
               json.dump(s, f, indent=2)
           print("DEBUG: simulated state.json:", json.dumps(s, indent=2))
