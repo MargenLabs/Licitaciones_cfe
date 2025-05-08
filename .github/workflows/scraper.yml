@@ -27,7 +27,7 @@ jobs:
         with:
           chrome-version: 'latest'
       - name: Install Chromedriver
-        uses: actions/setup-chromedriver@v3
+        uses: nanasess/setup-chromedriver@v2
         with:
           version: 'latest'
 
