@@ -3,7 +3,7 @@ name: CFE Scraper
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 15,19,23 * * *'  # 08:00,12:00,16:00 Tijuana (UTC−7 → UTC 15,19,23)
+    - cron: '0 15,19,23 * * *'  # 08:00,12:00,16:00 Tijuana (15,19,23 UTC)
 
 jobs:
   run-scraper:
@@ -33,21 +33,21 @@ jobs:
         env:
           TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          run: |
-            python3 <<'EOF'
-            import os, requests
-            token = os.environ["TELEGRAM_TOKEN"]
-            chat = os.environ["TELEGRAM_CHAT_ID"]
-            print("DEBUG: enviando mensaje de test a Telegram…")
-            r = requests.post(
-                f"https://api.telegram.org/bot{token}/sendMessage",
-                json={"chat_id": chat, "text": "🚀 Test Telegram desde GitHub Actions"}
-            )
-            print("DEBUG: status", r.status_code, "body", r.text)
-            EOF
+        run: |
+          python3 <<'EOF'
+          import os, requests
+          token = os.environ["TELEGRAM_TOKEN"]
+          chat = os.environ["TELEGRAM_CHAT_ID"]
+          print("DEBUG: enviando mensaje de test a Telegram…")
+          r = requests.post(
+              f"https://api.telegram.org/bot{token}/sendMessage",
+              json={"chat_id": chat, "text": "🚀 Test Telegram desde GitHub Actions"}
+          )
+          print("DEBUG: status", r.status_code, "body", r.text)
+          EOF
 
       - name: Simulate state.json change
-        run: |
+          run: |
           python3 <<'EOF'
           import json, os
 
@@ -70,10 +70,10 @@ jobs:
           EOF
 
       - name: Debug: list workspace files
-          run: ls -Rla .
+        run: ls -Rla .
 
       - name: Debug: show state.json
-          run: cat state.json
+        run: cat state.json
 
       - name: Run scraper
         env:
