@@ -78,24 +78,24 @@ def save_state():
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
 
-# Opciones headless y sin sandbox
-options = webdriver.ChromeOptions()
-options.add_argument("--headless=new")
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-options.add_argument("--disable-gpu")
-options.add_argument("--disable-extensions")
-options.add_argument("--disable-setuid-sandbox")
-options.add_argument("--single-process")
+# Opciones headless, GPU disabled
+def make_driver():    
+    opts = webdriver.ChromeOptions()
+    opts.add_argument("--headless=new")
+    opts.add_argument("--no-sandbox")
+    opts.add_argument("--disable-dev-shm-usage")
+    opts.add_argument("--disable-gpu")
+    opts.add_argument("--disable-software-rasterizer")
+    service = Service(shutil.which("chromedriver"))
+    return webdriver.Chrome(service=service, options=opts)
 
-# Busca chromedriver en el PATH
-chromedriver_path = shutil.which("chromedriver")
-if not chromedriver_path:
-    raise RuntimeError("chromedriver no encontrado en PATH")
+for clave in CLAVES:
+    driver = make_driver()
+    wait = WebDriverWait(driver, 30)
+    try:
+        driver.get("https://msc.cfe.mx/Aplicaciones/NCFE/Concursos/")
 
-service = Service(chromedriver_path)
-driver = webdriver.Chrome(service=service, options=options)
-wait = WebDriverWait(driver, 30)
+# — Aquí va TODO tu bloque de “busca por clave”, scraping, notificaciones, save_state() …
 
 try:
     for clave in CLAVES:
