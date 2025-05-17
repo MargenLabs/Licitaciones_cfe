@@ -79,7 +79,7 @@ def save_state():
         json.dump(state, f, indent=2, ensure_ascii=False)
 
 # Opciones headless, GPU disabled
-def make_driver():    
+def make_driver():
     opts = webdriver.ChromeOptions()
     opts.add_argument("--headless=new")
     opts.add_argument("--no-sandbox")
