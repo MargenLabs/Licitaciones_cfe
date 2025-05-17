@@ -80,14 +80,13 @@ def save_state():
 
 # Opciones headless y sin sandbox
 options = webdriver.ChromeOptions()
-options.add_argument("--headless")
+options.add_argument("--headless=new")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--disable-gpu")
-options.add_argument("--single-process")
 options.add_argument("--disable-extensions")
 options.add_argument("--disable-setuid-sandbox")
-options.add_argument("--headless=new")
+options.add_argument("--single-process")
 
 # Busca chromedriver en el PATH
 chromedriver_path = shutil.which("chromedriver")
@@ -98,8 +97,8 @@ service = Service(chromedriver_path)
 driver = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(driver, 30)
 
-try:
-    for clave in CLAVES:
+for clave in CLAVES:
+    try:
         # Navegar y buscar por clave
         driver.get("https://msc.cfe.mx/Aplicaciones/NCFE/Concursos/")
         campo = wait.until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Número de procedimiento"]')))
@@ -190,9 +189,9 @@ try:
 
     # fin for claves
 
-except Exception:
-    logging.exception("‼️ Excepción en scraping o notificaciones")
-    raise
+    except Exception:
+        logging.exception(f"‼️ Falló el scrape de {clave}, continúo con el siguiente")
+        continue   # sigue con la próxima clave sin cerrar driver   
 
 finally:
     driver.quit()
