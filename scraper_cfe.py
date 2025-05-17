@@ -45,6 +45,9 @@ if os.path.exists(STATE_FILE):
 else:
     state = {}
 
+# ← Punto A: DEBUG tras cargar el estado previo
+logging.info("DEBUG: claves en state previo: %s", list(state.keys()))
+
 # Lista de prefijos a consultar
 CLAVES = ["CFE-0201", "CFE-0604"]
 
@@ -129,6 +132,10 @@ try:
         for _, row in df.iterrows():
             numero_procedimiento    = row["Número de Procedimiento"]
             estado_nuevo            = row["Estado"]
+            
+            # ← Punto B1: DEBUG del estado que acabas de scrape
+            logging.info("DEBUG fila %s: Estado scrapeado = %r", numero_procedimiento, estado_nuevo)
+
             adjudicado_nuevo        = row["Adjudicado A"]
             monto_nuevo             = row["Monto Adjudicado"]
             descripcion_nuevo       = row["Descripción"]
@@ -150,6 +157,8 @@ try:
                 save_state()
             else:
                 prev = state[numero_procedimiento]
+                # ← Punto B2: DEBUG del estado previo desde state.json
+                logging.info("DEBUG prev[%s] = %r", numero_procedimiento, prev["Estado"])
                 cambios = []
                 if estado_nuevo != prev["Estado"]:
                     cambios.append(f"Estado: {prev['Estado']} → {estado_nuevo}")
