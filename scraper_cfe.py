@@ -194,7 +194,7 @@ try:
             logging.exception(f"‼️ Falló scraping para {clave}, saltando al siguiente")
             continue
 
-    except Exception as e:
+except Exception as e:
         # Esta excepción solo saltará si falla algo *fuera* del bucle
         logging.exception("‼️ Excepción fatal fuera del loop de claves")   
 
