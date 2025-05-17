@@ -70,8 +70,9 @@ def enviar_telegram(texto):
         resp = requests.post(url, data=payload, timeout=10)
         logging.info("Telegram API respondió: %d — %s", resp.status_code, resp.text)
         resp.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        logging.error("Error en enviar_telegram: %s", e)
+    except requests.exceptions.RequestException:
+        logging.exception("‼️ Excepción en scraping o notificaciones")
+        raise
 
 # Función para guardar el estado
 def save_state():
@@ -83,6 +84,11 @@ options = webdriver.ChromeOptions()
 options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--disable-gpu")
+options.add_argument("--single-process")
+options.add_argument("--disable-extensions")
+options.add_argument("--disable-setuid-sandbox")
+options.add_argument("--headless=new")
 
 # Busca chromedriver en el PATH
 chromedriver_path = shutil.which("chromedriver")
