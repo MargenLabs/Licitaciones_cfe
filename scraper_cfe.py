@@ -91,63 +91,71 @@ def main():
     driver = setup_driver()
     wait   = WebDriverWait(driver, 30)
 
-    try:
         for clave in CLAVES:
-            # 1) Navegar al portal
-            driver.get("https://msc.cfe.mx/Aplicaciones/NCFE/Concursos/")
-            # 2) Rellenar número de procedimiento
-            inp = wait.until(EC.visibility_of_element_located(
-                (By.XPATH, '//input[@placeholder="Número de procedimiento"]')
-            ))
-            inp.clear()
-            inp.send_keys(clave)
-            btn = wait.until(EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "button.btn.btn-success")
-            ))
-            btn.click()
+            try:
+                # 1) Navegar al portal
+                driver.get("https://msc.cfe.mx/Aplicaciones/NCFE/Concursos/")
+                # 2) Rellenar número de procedimiento
+                inp = wait.until(EC.visibility_of_element_located(
+                    (By.XPATH, '//input[@placeholder="Número de procedimiento"]')
+                ))
+                inp.clear()
+                inp.send_keys(clave)
+                btn = wait.until(EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, "button.btn.btn-success")
+                ))
+                btn.click()
 
-            # 3) Esperar resultados
-            time.sleep(5)
-            wait.until(EC.presence_of_element_located((By.XPATH, "//table//tr[td]")))
+                # 3) Esperar resultados
+                time.sleep(5)
+                wait.until(EC.presence_of_element_located((By.XPATH, "//table//tr[td]")))
 
-            # 4) Extraer filas
-            rows = driver.find_elements(By.XPATH, "//table//tr[td]")
-            data = []
-            for row in rows:
-                cols = row.find_elements(By.TAG_NAME, "td")
-                if len(cols) >= 10:
-                    data.append({
-                        "Número de Procedimiento": cols[0].text.strip(),
-                        "Descripción":             cols[3].text.strip(),
-                        "Fecha Publicación":       cols[6].text.strip(),
-                        "Estado":                  cols[7].text.strip(),
-                        "Adjudicado A":            cols[8].text.strip(),
-                        "Monto Adjudicado":        cols[9].text.strip(),
-                    })
+                # 4) Extraer filas
+                rows = driver.find_elements(By.XPATH, "//table//tr[td]")
+                data = []
+                for row in rows:
+                    cols = row.find_elements(By.TAG_NAME, "td")
+                    if len(cols) >= 10:
+                        data.append({
+                            "Número de Procedimiento": cols[0].text.strip(),
+                            "Descripción":             cols[3].text.strip(),
+                            "Fecha Publicación":       cols[6].text.strip(),
+                            "Estado":                  cols[7].text.strip(),
+                            "Adjudicado A":            cols[8].text.strip(),
+                            "Monto Adjudicado":        cols[9].text.strip(),
+                        })
 
-            df = pd.DataFrame(data)
-            logging.info("Scrapeó %d licitaciones para %s", len(df), clave)
+                df = pd.DataFrame(data)
+                logging.info("Scrapeó %d licitaciones para %s", len(df), clave)
 
-            # 5) Detectar nuevas o cambios
-            for _, row in df.iterrows():
-                pid      = row["Número de Procedimiento"]
-                estado   = row["Estado"]
-                adjud    = row["Adjudicado A"]
-                monto    = row["Monto Adjudicado"]
-                desc     = row["Descripción"]
-                fecha    = row["Fecha Publicación"]
+                # 5) Detectar nuevas o cambios
+                for _, row in df.iterrows():
+                    pid      = row["Número de Procedimiento"]
+                    estado   = row["Estado"]
+                    adjud    = row["Adjudicado A"]
+                    monto    = row["Monto Adjudicado"]
+                    desc     = row["Descripción"]
+                    fecha    = row["Fecha Publicación"]
 
-                if pid not in state:
-                    # nueva licitación
-                    msg = (
-                        f"⚠️ *Nueva licitación*:\n"
-                        f"- {desc}\n"
-                        f"- {pid}\n"
-                        f"- Fecha: {fecha}"
-                    )
-                    enviar_telegram(msg)
-                    state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
-                    save_state(state)
+                    if pid not in state:
+                        # nueva licitación
+                        msg = (
+                            f"⚠️ *Nueva licitación*:\n"
+                            f"- {desc}\n"
+                            f"- {pid}\n"
+                            f"- Fecha: {fecha}"
+                        )
+                        enviar_telegram(msg)
+                        state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
+                        save_state(state)
+                except WebDriverException as e:
+                    logging.error("🐞 WebDriverException en clave %s: %s", clave, e)
+                    logging.error("🔎 Remote stacktrace:\n%s", getattr(e, "stacktrace", "") or "")
+                    continue
+
+                except Exception:
+                    logging.error("🔥 Error inesperado en clave %s:\n%s", clave, traceback.format_exc())
+                    continue
 
                 else:
                     prev = state[pid]
@@ -171,32 +179,14 @@ def main():
                         state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
                         save_state(state)
 
-    except WebDriverException as e:
-        # logueamos toda la excepción, no sólo e.msg (que a veces viene vacío)
-        logging.error("🐞 WebDriverException: %s", e)
-        logging.error("🔎 Remote Selenium stacktrace:\n%s",
-                      getattr(e, 'stacktrace', '') or '')
-        # no hacemos `raise` aquí para que el bucle continúe con el siguiente PID
-        continue
+    # volcamos logs internos antes de cerrar
+    for entry in driver.get_log("browser"):
+        logging.info("📘 Browser log: %s", entry)
+    for entry in driver.get_log("driver"):
+        logging.info("🛠 Driver log: %s", entry)
 
-    except Exception:
-        logging.error("🔥 Excepción inesperada:\n%s", traceback.format_exc())
-        # idem: no re-lanzamos, dejamos que siga con el siguiente
-        continue
-    else:
-        # aquí podrías procesar resultados si quieres
-        pass  
-        # NECESARIO: al menos un `pass` si no vas a meter código
-    finally:
-        # volcamos logs internos antes de cerrar
-        for entry in driver.get_log('browser'):
-            logging.info("📘 Browser log: %s", entry)
-        for entry in driver.get_log('driver'):
-            logging.info("🛠 Driver log:  %s", entry)
-
-        # finalmente cerramos el driver
-        driver.quit()
-        logging.info("Driver cerrado.")
+    driver.quit()
+    logging.info("Driver cerrado.")
 
 if __name__ == "__main__":
     main()
