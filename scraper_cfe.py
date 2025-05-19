@@ -148,14 +148,6 @@ def main():
                     enviar_telegram(msg)
                     state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
                     save_state(state)
-            except WebDriverException as e:
-                logging.error("🐞 WebDriverException en clave %s: %s", clave, e)
-                logging.error("🔎 Remote stacktrace:\n%s", getattr(e, "stacktrace", "") or "")
-                continue
-
-            except Exception:
-                logging.error("🔥 Error inesperado en clave %s:\n%s", clave, traceback.format_exc())
-                continue
 
             else:
                 prev = state[pid]
