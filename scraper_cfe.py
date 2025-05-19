@@ -10,12 +10,14 @@ import time
 import shutil
 import requests
 import pandas as pd
+import traceback
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import WebDriverException
 
 # ─── Configuración básica ──────────────────────────────────────────────────────
 logging.basicConfig(
@@ -68,17 +70,22 @@ def save_state(state: dict):
         json.dump(state, f, indent=2, ensure_ascii=False)
 
 def setup_driver() -> webdriver.Chrome:
-    """Inicializa y devuelve un Chrome headless listo."""
+    """Inicializa y devuelve un Chrome headless con logging activado."""
+    from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+    
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--enable-logging")
+    options.add_argument("--v=1")
+
+    caps = DesiredCapabilities.CHROME.copy()
+    caps['goog:loggingPrefs'] = {'browser': 'ALL', 'driver': 'ALL'}
 
     chromedriver = shutil.which("chromedriver")
-    if not chromedriver:
-        raise RuntimeError("chromedriver no está en PATH")
     service = Service(executable_path=chromedriver)
-    return webdriver.Chrome(service=service, options=options)
+    return webdriver.Chrome(service=service, options=options, desired_capabilities=caps)
 
 # ─── Bloque principal ────────────────────────────────────────────────────────
 def main():
@@ -168,11 +175,24 @@ def main():
                         state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
                         save_state(state)
 
-    except Exception as e:
-        logging.error("‼️ Excepción en scraping: %s", e)
+    except WebDriverException as e:
+        logging.error("🐞 WebDriverException: %s", e.msg)
+        logging.error("🔎 Remote Selenium stacktrace:\n%s", getattr(e, 'stacktrace', '—sin stacktrace—'))
+        raise
+    except Exception:
+        logging.error("🔥 Excepción inesperada:\n%s", traceback.format_exc())
+        raise
+    else:
+        # aquí podrías procesar resultados si quieres
     finally:
-        driver.quit()
-        logging.info("Driver cerrado.")
+    # volcamos logs internos antes de cerrar
+    for entry in driver.get_log('browser'):
+        logging.info("📘 Browser log: %s", entry)
+    for entry in driver.get_log('driver'):
+        logging.info("🛠 Driver log:  %s", entry)
+
+    driver.quit()
+    logging.info("Driver cerrado.")
 
 if __name__ == "__main__":
     main()
