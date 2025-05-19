@@ -92,84 +92,83 @@ def main():
     wait   = WebDriverWait(driver, 30)
 
     for clave in CLAVES:
-        try:
-            # 1) Navegar al portal
-            driver.get("https://msc.cfe.mx/Aplicaciones/NCFE/Concursos/")
-            # 2) Rellenar número de procedimiento
-            inp = wait.until(EC.visibility_of_element_located(
-                (By.XPATH, '//input[@placeholder="Número de procedimiento"]')
-            ))
-            inp.clear()
-            inp.send_keys(clave)
-            btn = wait.until(EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "button.btn.btn-success")
-            ))
-            btn.click()
+        # 1) Navegar al portal
+        driver.get("https://msc.cfe.mx/Aplicaciones/NCFE/Concursos/")
+        # 2) Rellenar número de procedimiento
+        inp = wait.until(EC.visibility_of_element_located(
+            (By.XPATH, '//input[@placeholder="Número de procedimiento"]')
+        ))
+        inp.clear()
+        inp.send_keys(clave)
+        btn = wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, "button.btn.btn-success")
+        ))
+        btn.click()
 
-            # 3) Esperar resultados
-            time.sleep(5)
-            wait.until(EC.presence_of_element_located((By.XPATH, "//table//tr[td]")))
+        # 3) Esperar resultados
+        time.sleep(5)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//table//tr[td]")))
 
-            # 4) Extraer filas
-            rows = driver.find_elements(By.XPATH, "//table//tr[td]")
-            data = []
-            for row in rows:
-                cols = row.find_elements(By.TAG_NAME, "td")
-                if len(cols) >= 10:
-                    data.append({
-                        "Número de Procedimiento": cols[0].text.strip(),
-                        "Descripción":             cols[3].text.strip(),
-                        "Fecha Publicación":       cols[6].text.strip(),
-                        "Estado":                  cols[7].text.strip(),
-                        "Adjudicado A":            cols[8].text.strip(),
-                        "Monto Adjudicado":        cols[9].text.strip(),
-                    })
+        # 4) Extraer filas
+        rows = driver.find_elements(By.XPATH, "//table//tr[td]")
+        data = []
+        for row in rows:
+            cols = row.find_elements(By.TAG_NAME, "td")
+            if len(cols) >= 10:
+                data.append({
+                    "Número de Procedimiento": cols[0].text.strip(),
+                    "Descripción":             cols[3].text.strip(),
+                    "Fecha Publicación":       cols[6].text.strip(),
+                    "Estado":                  cols[7].text.strip(),
+                    "Adjudicado A":            cols[8].text.strip(),
+                    "Monto Adjudicado":        cols[9].text.strip(),
+                })
 
-            df = pd.DataFrame(data)
-            logging.info("Scrapeó %d licitaciones para %s", len(df), clave)
+        df = pd.DataFrame(data)
+        logging.info("Scrapeó %d licitaciones para %s", len(df), clave)
 
-            # 5) Detectar nuevas o cambios
-            for _, row in df.iterrows():
-                pid      = row["Número de Procedimiento"]
-                estado   = row["Estado"]
-                adjud    = row["Adjudicado A"]
-                monto    = row["Monto Adjudicado"]
-                desc     = row["Descripción"]
-                fecha    = row["Fecha Publicación"]
+        # 5) Detectar nuevas o cambios
+        for _, row in df.iterrows():
+            pid      = row["Número de Procedimiento"]
+            estado   = row["Estado"]
+            adjud    = row["Adjudicado A"]
+            monto    = row["Monto Adjudicado"]
+            desc     = row["Descripción"]
+            fecha    = row["Fecha Publicación"]
 
-                if pid not in state:
-                    # nueva licitación
-                    msg = (
-                        f"⚠️ *Nueva licitación*:\n"
-                        f"- {desc}\n"
-                        f"- {pid}\n"
-                        f"- Fecha: {fecha}"
-                    )
-                    enviar_telegram(msg)
-                    state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
-                    save_state(state)
+            if pid not in state:
+                # nueva licitación
+                msg = (
+                    f"⚠️ *Nueva licitación*:\n"
+                    f"- {desc}\n"
+                    f"- {pid}\n"
+                    f"- Fecha: {fecha}"
+                )
+                enviar_telegram(msg)
+                state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
+                save_state(state)
 
-            else:
-                prev = state[pid]
-                diffs = []
-                if estado != prev["Estado"]:
-                    diffs.append(f"Estado: {prev['Estado']} → {estado}")
-                if adjud != prev["Adjudicado a"]:
-                    diffs.append(f"Adjudicado a: {prev['Adjudicado a']} → {adjud}")
-                pm = prev.get("Monto Adjudicado", "")
-                if pm and monto != pm:
-                    diffs.append(f"Monto: {pm} → {monto}")
+        else:
+            prev = state[pid]
+            diffs = []
+            if estado != prev["Estado"]:
+                diffs.append(f"Estado: {prev['Estado']} → {estado}")
+            if adjud != prev["Adjudicado a"]:
+                diffs.append(f"Adjudicado a: {prev['Adjudicado a']} → {adjud}")
+            pm = prev.get("Monto Adjudicado", "")
+            if pm and monto != pm:
+                diffs.append(f"Monto: {pm} → {monto}")
                     
-                if diffs:
-                    msg = (
-                        f"ℹ️ *Cambio detectado*:\n"
-                        f"- {desc}\n"
-                        f"- {pid}\n"
-                        + "\n".join(f"- {d}" for d in diffs)
-                    )
-                    enviar_telegram(msg)
-                    state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
-                    save_state(state)
+            if diffs:
+                msg = (
+                    f"ℹ️ *Cambio detectado*:\n"
+                    f"- {desc}\n"
+                    f"- {pid}\n"
+                    + "\n".join(f"- {d}" for d in diffs)
+                )
+                enviar_telegram(msg)
+                state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
+                save_state(state)
 
     # volcamos logs internos antes de cerrar
     for entry in driver.get_log("browser"):
