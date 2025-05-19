@@ -18,6 +18,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import TimeoutException
 
 # ─── Configuración básica ──────────────────────────────────────────────────────
 logging.basicConfig(
@@ -107,10 +108,14 @@ def main():
 
         # 3) Esperar resultados
         time.sleep(5)
-        wait.until(EC.presence_of_element_located((By.XPATH, "//table//tr[td]")))
-
-        # 4) Extraer filas
-        rows = driver.find_elements(By.XPATH, "//table//tr[td]")
+        try:
+            # Intentamos obtener todas las filas; si no hay ninguna, no explota
+            rows = wait.until(
+                EC.presence_of_all_elements_located((By.XPATH, "//table//tr[td]"))
+            )
+        except TimeoutException:
+            logging.info("🔍 Sin resultados para %s", clave)
+            continue  # pasamos a la siguiente clave
         data = []
         for row in rows:
             cols = row.find_elements(By.TAG_NAME, "td")
