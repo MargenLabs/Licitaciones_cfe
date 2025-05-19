@@ -184,6 +184,7 @@ def main():
         raise
     else:
         # aquí podrías procesar resultados si quieres
+        pass                      ←— NECESARIO: al menos un `pass` si no vas a meter código
     finally:
         # volcamos logs internos antes de cerrar
         for entry in driver.get_log('browser'):
@@ -191,8 +192,9 @@ def main():
         for entry in driver.get_log('driver'):
             logging.info("🛠 Driver log:  %s", entry)
 
-    driver.quit()
-    logging.info("Driver cerrado.")
+        # finalmente cerramos el driver
+        driver.quit()
+        logging.info("Driver cerrado.")
 
 if __name__ == "__main__":
     main()
