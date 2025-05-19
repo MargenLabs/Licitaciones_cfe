@@ -70,22 +70,18 @@ def save_state(state: dict):
         json.dump(state, f, indent=2, ensure_ascii=False)
 
 def setup_driver() -> webdriver.Chrome:
-    """Inicializa y devuelve un Chrome headless con logging activado."""
-    from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-    
     options = webdriver.ChromeOptions()
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--enable-logging")
     options.add_argument("--v=1")
-
-    caps = DesiredCapabilities.CHROME.copy()
-    caps['goog:loggingPrefs'] = {'browser': 'ALL', 'driver': 'ALL'}
+    # Capturamos logs de browser y driver desde Chrome
+    options.set_capability('goog:loggingPrefs', {'browser': 'ALL', 'driver': 'ALL'})
 
     chromedriver = shutil.which("chromedriver")
     service = Service(executable_path=chromedriver)
-    return webdriver.Chrome(service=service, options=options, desired_capabilities=caps)
+    return webdriver.Chrome(service=service, options=options)
 
 # ─── Bloque principal ────────────────────────────────────────────────────────
 def main():
