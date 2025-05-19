@@ -178,8 +178,8 @@ def main():
     # volcamos logs internos antes de cerrar
     #for entry in driver.get_log("browser"):
         #logging.info("📘 Browser log: %s", entry)
-    for entry in driver.get_log("driver"):
-        logging.info("🛠 Driver log: %s", entry)
+    #for entry in driver.get_log("driver"):
+        #logging.info("🛠 Driver log: %s", entry)
 
     driver.quit()
     logging.info("Driver cerrado.")
