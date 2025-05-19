@@ -172,12 +172,17 @@ def main():
                         save_state(state)
 
     except WebDriverException as e:
-        logging.error("🐞 WebDriverException: %s", e.msg)
-        logging.error("🔎 Remote Selenium stacktrace:\n%s", getattr(e, 'stacktrace', '—sin stacktrace—'))
-        raise
+        # logueamos toda la excepción, no sólo e.msg (que a veces viene vacío)
+        logging.error("🐞 WebDriverException: %s", e)
+        logging.error("🔎 Remote Selenium stacktrace:\n%s",
+                      getattr(e, 'stacktrace', '') or '')
+        # no hacemos `raise` aquí para que el bucle continúe con el siguiente PID
+        continue
+
     except Exception:
         logging.error("🔥 Excepción inesperada:\n%s", traceback.format_exc())
-        raise
+        # idem: no re-lanzamos, dejamos que siga con el siguiente
+        continue
     else:
         # aquí podrías procesar resultados si quieres
         pass  
