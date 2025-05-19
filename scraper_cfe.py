@@ -184,7 +184,8 @@ def main():
         raise
     else:
         # aquí podrías procesar resultados si quieres
-        pass                      ←— NECESARIO: al menos un `pass` si no vas a meter código
+        pass  
+        # NECESARIO: al menos un `pass` si no vas a meter código
     finally:
         # volcamos logs internos antes de cerrar
         for entry in driver.get_log('browser'):
