@@ -108,16 +108,28 @@ def main():
         ))
         btn.click()
 
-        # 3) Esperar resultados
-        time.sleep(5)
-        try:
-            # Intentamos obtener todas las filas; si no hay ninguna, no explota
-            rows = wait.until(
-                EC.presence_of_all_elements_located((By.XPATH, "//table//tbody//tr"))
+        # 3) Esperar y hacer scroll hasta cargar todas las filas (200)
+        # Encuentra el contenedor scrollable de la tabla
+        table_body = wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.dataTables_scrollBody"))
+        )
+        # Itera haciendo scroll hacia abajo hasta que no aparezcan más filas
+        prev_count = 0
+        while True:
+            driver.execute_script(
+                "arguments[0].scrollTop = arguments[0].scrollHeight", 
+                table_body
             )
-        except TimeoutException:
+            time.sleep(0.5)  # deja que renderice nuevas filas
+            rows = table_body.find_elements(By.XPATH, ".//tr[td]")
+            if len(rows) == prev_count:
+                break
+            prev_count = len(rows)
+        # Si tras el scroll no hay **ninguna** fila, saltamos la clave
+        if not rows:
             logging.info("🔍 Sin resultados para %s", clave)
-            continue  # pasamos a la siguiente clave
+            continue
+        
         # Extraemos los IDs de procedimiento de cada fila y los guardamos
         pids_en_pagina = [
             r.find_element(By.XPATH, "./td[1]").text
