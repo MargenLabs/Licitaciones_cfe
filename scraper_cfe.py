@@ -93,7 +93,7 @@ def main():
     logging.info("Claves en state previo: %s", list(state.keys()))
 
     driver = setup_driver()
-    wait   = WebDriverWait(driver, 60)
+    wait   = WebDriverWait(driver, 30)
 
     for clave in CLAVES:
         # 1) Navegar al portal
