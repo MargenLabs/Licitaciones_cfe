@@ -111,7 +111,7 @@ def main():
 
         # 3) Esperar a que aparezca al menos una fila
         try:
-                wait.until(EC.presence_of_element_located((By.XPATH, "//table//tbody//tr")))
+            wait.until(EC.presence_of_element_located((By.XPATH, "//table//tbody//tr")))
         except TimeoutException:
             logging.info("🔍 Sin resultados para %s", clave)
             continue
@@ -122,22 +122,22 @@ def main():
             if not rows:
                 break  # no hay filas, salimos
 
-            # 5) Por cada fila extraemos datos y los guardamos
-            for row in rows:
+        # 5) Por cada fila extraemos datos y los guardamos
+        for row in rows:
                 # … aquí va tu lógica actual para procesar `row` …
                 # por ejemplo: pid = row.find_element(…)
                 # guardar en `data`, enviar Telegram, save_state, etc.
 
-            # 6) Intentar ir a la siguiente página
-            try:
-                btn_next = driver.find_element(By.LINK_TEXT, "Siguiente")
-                if "disabled" in btn_next.get_attribute("class"):
-                    break  # llegó al final
-                btn_next.click()
+        # 6) Intentar ir a la siguiente página
+        try:
+            btn_next = driver.find_element(By.LINK_TEXT, "Siguiente")
+            if "disabled" in btn_next.get_attribute("class"):
+                break  # llegó al final
+            btn_next.click()
                 # esperamos que la tabla cambie
                 wait.until(EC.staleness_of(rows[0]))
-            except NoSuchElementException:
-                break  # no hay botón “Siguiente”, salimos
+        except NoSuchElementException:
+            break  # no hay botón “Siguiente”, salimos
         
         # Extraemos los IDs de procedimiento de cada fila y los guardamos
         pids_en_pagina = [
