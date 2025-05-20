@@ -113,7 +113,7 @@ def main():
         try:
             # Intentamos obtener todas las filas; si no hay ninguna, no explota
             rows = wait.until(
-                EC.presence_of_all_elements_located((By.XPATH, "//table//tr[td]"))
+                EC.presence_of_all_elements_located((By.XPATH, "//table//tbody//tr"))
             )
         except TimeoutException:
             logging.info("🔍 Sin resultados para %s", clave)
