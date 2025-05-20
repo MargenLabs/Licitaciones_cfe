@@ -192,6 +192,10 @@ def main():
         logging.warning("⚠️ Estas PIDs están en state.json PERO ya no aparecen en la web: %s", extra)
     if not missing and not extra:
         logging.info("✅ state.json coincide 100%% con los PIDs visibles en la web (%d).", len(current_pids))
+    # ———————————— PURGAR los PIDs que sobraban
+    for pid in extra:
+        state.pop(pid, None)
+    save_state(state)
     # volcamos logs internos antes de cerrar
     #for entry in driver.get_log("browser"):
         #logging.info("📘 Browser log: %s", entry)
