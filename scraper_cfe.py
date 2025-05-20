@@ -107,6 +107,7 @@ def main():
         btn = wait.until(EC.element_to_be_clickable(
             (By.CSS_SELECTOR, "button.btn.btn-success")
         ))
+        logging.info("🔎 Buscando procedimiento: '%s'", clave)
         btn.click()
 
         # 3) Esperar a que aparezca al menos una fila
