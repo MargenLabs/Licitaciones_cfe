@@ -122,29 +122,29 @@ def main():
 
         # 4) Procesar todas las páginas de resultados
         while True:
-        rows = driver.find_elements(By.XPATH, "//table//tbody//tr")
-        if not rows:
-            break  # no hay filas, salimos
+            rows = driver.find_elements(By.XPATH, "//table//tbody//tr")
+            if not rows:
+                break  # no hay filas, salimos
 
-        # 5) Por cada fila extraemos datos y los guardamos
-        for row in rows:
-            pid    = row.find_element(By.XPATH, "./td[1]").text
-            estado = row.find_element(By.XPATH, "./td[2]").text
-            adj    = row.find_element(By.XPATH, "./td[3]").text
-            monto  = row.find_element(By.XPATH, "./td[4]").text
-            desc   = row.find_element(By.XPATH, "./td[5]").text
-            fecha  = row.find_element(By.XPATH, "./td[6]").text
-            # … resto de tu lógica: comparar con state, enviar Telegram, save_state( ) …
+            # 5) Por cada fila extraemos datos y los guardamos
+            for row in rows:
+                pid    = row.find_element(By.XPATH, "./td[1]").text
+                estado = row.find_element(By.XPATH, "./td[2]").text
+                adj    = row.find_element(By.XPATH, "./td[3]").text
+                monto  = row.find_element(By.XPATH, "./td[4]").text
+                desc   = row.find_element(By.XPATH, "./td[5]").text
+                fecha  = row.find_element(By.XPATH, "./td[6]").text
+                # … resto de tu lógica: comparar con state, enviar Telegram, save_state( ) …
 
-        # 6) Intentar ir a la siguiente página
-        try:
-            btn_next = driver.find_element(By.LINK_TEXT, "Siguiente")
-            if "disabled" in btn_next.get_attribute("class"):
+            # 6) Intentar ir a la siguiente página
+            try:
+                btn_next = driver.find_element(By.LINK_TEXT, "Siguiente")
+                if "disabled" in btn_next.get_attribute("class"):
+                    break
+                btn_next.click()
+                wait.until(EC.staleness_of(rows[0]))
+            except NoSuchElementException:
                 break
-            btn_next.click()
-            wait.until(EC.staleness_of(rows[0]))
-        except NoSuchElementException:
-            break
 
         # Extraemos los IDs de procedimiento de cada fila y los guardamos
         pids_en_pagina = [
