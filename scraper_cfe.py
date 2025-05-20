@@ -19,6 +19,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 
 # ─── Configuración básica ──────────────────────────────────────────────────────
 logging.basicConfig(
@@ -108,27 +109,35 @@ def main():
         ))
         btn.click()
 
-        # 3) Esperar y hacer scroll hasta cargar todas las filas (200)
-        # Encuentra el contenedor scrollable de la tabla
-        table_body = wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.dataTables_scrollBody"))
-        )
-        # Itera haciendo scroll hacia abajo hasta que no aparezcan más filas
-        prev_count = 0
-        while True:
-            driver.execute_script(
-                "arguments[0].scrollTop = arguments[0].scrollHeight", 
-                table_body
-            )
-            time.sleep(0.5)  # deja que renderice nuevas filas
-            rows = table_body.find_elements(By.XPATH, ".//tr[td]")
-            if len(rows) == prev_count:
-                break
-            prev_count = len(rows)
-        # Si tras el scroll no hay **ninguna** fila, saltamos la clave
-        if not rows:
+        # 3) Esperar a que aparezca al menos una fila
+        try:
+            wait.until(EC.presence_of_element_located((By.XPATH, "//table//tbody//tr")))
+        except TimeoutException:
             logging.info("🔍 Sin resultados para %s", clave)
             continue
+
+        # 4) Procesar todas las páginas de resultados
+        while True:
+            rows = driver.find_elements(By.XPATH, "//table//tbody//tr")
+            if not rows:
+                break  # no hay filas, salimos
+
+            # 5) Por cada fila extraemos datos y los guardamos
+            for row in rows:
+                # … aquí va tu lógica actual para procesar `row` …
+                # por ejemplo: pid = row.find_element(…)
+                # guardar en `data`, enviar Telegram, save_state, etc.
+
+            # 6) Intentar ir a la siguiente página
+            try:
+                btn_next = driver.find_element(By.LINK_TEXT, "Siguiente")
+                if "disabled" in btn_next.get_attribute("class"):
+                    break  # llegó al final
+                btn_next.click()
+                # esperamos que la tabla cambie
+                wait.until(EC.staleness_of(rows[0]))
+            except NoSuchElementException:
+                break  # no hay botón “Siguiente”, salimos
         
         # Extraemos los IDs de procedimiento de cada fila y los guardamos
         pids_en_pagina = [
