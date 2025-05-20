@@ -111,7 +111,7 @@ def main():
 
         # 3) Esperar a que aparezca al menos una fila
         try:
-            wait.until(EC.presence_of_element_located((By.XPATH, "//table//tbody//tr")))
+                wait.until(EC.presence_of_element_located((By.XPATH, "//table//tbody//tr")))
         except TimeoutException:
             logging.info("🔍 Sin resultados para %s", clave)
             continue
