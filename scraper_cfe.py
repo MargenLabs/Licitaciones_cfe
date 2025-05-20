@@ -88,7 +88,7 @@ def setup_driver() -> webdriver.Chrome:
 def main():
     state = load_state()
         # ———————————— INTEGRIDAD: inicializamos conjunto de PIDs vistos en la web
-        current_pids = set()
+    current_pids = set()
     logging.info("Claves en state previo: %s", list(state.keys()))
 
     driver = setup_driver()
