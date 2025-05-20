@@ -87,6 +87,8 @@ def setup_driver() -> webdriver.Chrome:
 # ─── Bloque principal ────────────────────────────────────────────────────────
 def main():
     state = load_state()
+        # ———————————— INTEGRIDAD: inicializamos conjunto de PIDs vistos en la web
+        current_pids = set()
     logging.info("Claves en state previo: %s", list(state.keys()))
 
     driver = setup_driver()
@@ -116,6 +118,12 @@ def main():
         except TimeoutException:
             logging.info("🔍 Sin resultados para %s", clave)
             continue  # pasamos a la siguiente clave
+        # Extraemos los IDs de procedimiento de cada fila y los guardamos
+        pids_en_pagina = [
+            r.find_element(By.XPATH, "./td[1]").text
+            for r in rows
+        ]
+        current_pids.update(pids_en_pagina)
         data = []
         for row in rows:
             cols = row.find_elements(By.TAG_NAME, "td")
@@ -174,7 +182,16 @@ def main():
                 enviar_telegram(msg)
                 state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
                 save_state(state)
-
+    # ———————————— INTEGRIDAD: comparamos con lo que ya teníamos en state.json
+    existing_pids = set(state.keys())
+    missing = current_pids - existing_pids
+    extra   = existing_pids - current_pids
+    if missing:
+        logging.warning("⚠️ Estas PIDs FALTAN en state.json (pág. web): %s", missing)
+    if extra:
+        logging.warning("⚠️ Estas PIDs están en state.json PERO ya no aparecen en la web: %s", extra)
+    if not missing and not extra:
+        logging.info("✅ state.json coincide 100%% con los PIDs visibles en la web (%d).", len(current_pids))
     # volcamos logs internos antes de cerrar
     #for entry in driver.get_log("browser"):
         #logging.info("📘 Browser log: %s", entry)
