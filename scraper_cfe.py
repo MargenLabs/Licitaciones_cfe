@@ -135,7 +135,7 @@ def main():
                 monto  = row.find_element(By.XPATH, "./td[4]").text
                 desc   = row.find_element(By.XPATH, "./td[5]").text
                 fecha  = row.find_element(By.XPATH, "./td[6]").text
-                # … resto de tu lógica: comparar con state, enviar Telegram, save_state( ) …
+                # … resto de tu lógica: comparar con state, enviar Telegram, save_state() …
 
             # 6) Intentar ir a la siguiente página
             try:
