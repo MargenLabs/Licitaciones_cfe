@@ -190,27 +190,27 @@ def main():
                 state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
                 save_state(state)
 
-        else:
-            prev = state[pid]
-            diffs = []
-            if estado != prev["Estado"]:
-                diffs.append(f"Estado: {prev['Estado']} → {estado}")
-            if adjud != prev["Adjudicado a"]:
-                diffs.append(f"Adjudicado a: {prev['Adjudicado a']} → {adjud}")
-            pm = prev.get("Monto Adjudicado", "")
-            if pm and monto != pm:
-                diffs.append(f"Monto: {pm} → {monto}")
-                    
-            if diffs:
-                msg = (
-                    f"ℹ️ *Cambio detectado*:\n"
-                    f"- {desc}\n"
-                    f"- {pid}\n"
-                    + "\n".join(f"- {d}" for d in diffs)
-                )
-                enviar_telegram(msg)
-                state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
-                save_state(state)
+            else:
+                prev = state[pid]
+                diffs = []
+                if estado != prev["Estado"]:
+                    diffs.append(f"Estado: {prev['Estado']} → {estado}")
+                if adjud != prev["Adjudicado a"]:
+                    diffs.append(f"Adjudicado a: {prev['Adjudicado a']} → {adjud}")
+                pm = prev.get("Monto Adjudicado", "")
+                if pm and monto != pm:
+                    diffs.append(f"Monto: {pm} → {monto}")
+
+                if diffs:
+                    msg = (
+                        f"ℹ️ *Cambio detectado*:\n"
+                        f"- {desc}\n"
+                        f"- {pid}\n"
+                        + "\n".join(f"- {d}" for d in diffs)
+                    )
+                    enviar_telegram(msg)
+                    state[pid] = {"Estado": estado, "Adjudicado a": adjud, "Monto Adjudicado": monto}
+                    save_state(state)
     # ———————————— INTEGRIDAD: comparamos con lo que ya teníamos en state.json
     existing_pids = set(state.keys())
     missing = current_pids - existing_pids
