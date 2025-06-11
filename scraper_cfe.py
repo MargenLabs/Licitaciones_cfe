@@ -125,6 +125,7 @@ def main():
             continue
 
         # 4) Procesar todas las páginas de resultados
+        data = []
         while True:
             rows = driver.find_elements(By.XPATH, "//table//tbody//tr")
             if not rows:
@@ -138,7 +139,16 @@ def main():
                 monto  = row.find_element(By.XPATH, "./td[4]").text
                 desc   = row.find_element(By.XPATH, "./td[5]").text
                 fecha  = row.find_element(By.XPATH, "./td[6]").text
-                # … resto de tu lógica: comparar con state, enviar Telegram, save_state() …
+                
+                current_pids.add(pid)
+                data.append({
+                    "Número de Procedimiento": pid,
+                    "Descripción":             desc,
+                    "Fecha Publicación":       fecha,
+                    "Estado":                  estado,
+                    "Adjudicado A":            adj,
+                    "Monto Adjudicado":        monto,
+                })
 
             # 6) Intentar ir a la siguiente página
             try:
@@ -149,25 +159,6 @@ def main():
                 wait.until(EC.staleness_of(rows[0]))
             except NoSuchElementException:
                 break
-
-        # Extraemos los IDs de procedimiento de cada fila y los guardamos
-        pids_en_pagina = [
-            r.find_element(By.XPATH, "./td[1]").text
-            for r in rows
-        ]
-        current_pids.update(pids_en_pagina)
-        data = []
-        for row in rows:
-            cols = row.find_elements(By.TAG_NAME, "td")
-            if len(cols) >= 10:
-                data.append({
-                    "Número de Procedimiento": cols[0].text.strip(),
-                    "Descripción":             cols[3].text.strip(),
-                    "Fecha Publicación":       cols[6].text.strip(),
-                    "Estado":                  cols[7].text.strip(),
-                    "Adjudicado A":            cols[8].text.strip(),
-                    "Monto Adjudicado":        cols[9].text.strip(),
-                })
 
         df = pd.DataFrame(data)
         logging.info("Scrapeó %d licitaciones para %s", len(df), clave)
