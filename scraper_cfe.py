@@ -28,7 +28,10 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
-STATE_FILE = "state.json"
+# Usar una ruta absoluta garantiza que state.json se cargue y guarde en el
+# mismo directorio del script, sin importar desde dónde se ejecute.
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+STATE_FILE = os.path.join(ROOT_DIR, "state.json")
 CLAVES     = ["CFE-0201", "CFE-0604"]
 BOT_TOKEN  = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID    = os.getenv("TELEGRAM_CHAT_ID")
